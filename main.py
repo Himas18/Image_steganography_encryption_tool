@@ -47,8 +47,7 @@ def _pixels_from_image(img: Image.Image):
 def embed_payload_in_image(in_path: str, out_path: str, payload: bytes):
     img = Image.open(in_path)
     data, has_alpha, mode, (w, h) = _pixels_from_image(img)
-    # We will use R,G,B channels for bits. Capacity:
-    capacity = len(data) * 3  # bits
+    capacity = len(data) * 3 
     total_bits = len(payload) * 8
     if total_bits > capacity:
         raise ValueError(f"Payload too large for image capacity ({total_bits} > {capacity})")
@@ -66,7 +65,7 @@ def embed_payload_in_image(in_path: str, out_path: str, payload: bytes):
             new_pixels.append((r, g, b, a))
         else:
             new_pixels.append((r, g, b))
-    # Build image and save as PNG to avoid compression losses
+    # Building image and saving it as PNG to avoid compression losses
     out_img = Image.new("RGBA" if has_alpha else "RGB", (w, h))
     out_img.putdata(new_pixels)
     out_img.save(out_path, format="PNG")
@@ -80,7 +79,6 @@ def extract_payload_from_image(in_path: str) -> bytes:
         bits.append(str(px[1] & 1))
         bits.append(str(px[2] & 1))
     bitstring = ''.join(bits)
-    # Need first 20 bytes (16 salt + 4 length) => 160 bits
     if len(bitstring) < 160:
         raise ValueError("Image too small / no payload")
     header_bits = bitstring[:160]
@@ -94,7 +92,6 @@ def extract_payload_from_image(in_path: str) -> bytes:
     payload_bytes = bytes(int(payload_bits[i:i+8], 2) for i in range(0, total_bits_needed, 8))
     return payload_bytes
 
-# --- GUI ---
 class StegGUI:
     def __init__(self, root):
         self.root = root
@@ -103,7 +100,6 @@ class StegGUI:
         self.in_path = None
         self.out_path = None
 
-        # Left: Image preview & choose
         left = tk.Frame(root)
         left.pack(side=tk.LEFT, fill=tk.Y, padx=8, pady=8)
 
@@ -115,11 +111,11 @@ class StegGUI:
         tk.Button(btn_frame, text="Open Image...", command=self.open_image).pack(side=tk.LEFT, padx=4)
         tk.Button(btn_frame, text="Save As...", command=self.save_as).pack(side=tk.LEFT, padx=4)
 
-        # Right: controls
+    
         right = tk.Frame(root)
         right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=8, pady=8)
 
-        # Hide section
+
         tk.Label(right, text="Hide (encrypt & embed)").pack(anchor="w")
         tk.Label(right, text="Message:").pack(anchor="w")
         self.msg_text = scrolledtext.ScrolledText(right, height=6)
@@ -131,8 +127,8 @@ class StegGUI:
 
         tk.Button(right, text="Hide into Image", command=self.hide_into_image, bg="#4caf50", fg="white").pack(pady=8)
 
-        tk.Label(right, text="").pack()  # spacer
-        # Reveal section
+        tk.Label(right, text="").pack() 
+     
         tk.Label(right, text="Reveal (extract & decrypt)").pack(anchor="w", pady=(10,0))
         tk.Label(right, text="Password (for decryption):").pack(anchor="w")
         self.pw_entry2 = tk.Entry(right, show="*")
@@ -144,7 +140,7 @@ class StegGUI:
         self.out_text = scrolledtext.ScrolledText(right, height=8)
         self.out_text.pack(fill=tk.BOTH, expand=True, padx=2)
 
-        # Status
+
         self.status = tk.Label(root, text="Ready", bd=1, relief=tk.SUNKEN, anchor="w")
         self.status.pack(side=tk.BOTTOM, fill=tk.X)
 
@@ -189,7 +185,6 @@ class StegGUI:
             self.status.config(text=f"Error: {e}")
 
     def reveal_from_image(self):
-        # choose image if none opened
         img_path = self.in_path or filedialog.askopenfilename(filetypes=[("PNG","*.png;*.jpg;*.jpeg;*.bmp;*.tiff")])
         if not img_path:
             return
